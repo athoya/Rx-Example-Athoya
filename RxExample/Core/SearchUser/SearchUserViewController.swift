@@ -43,13 +43,19 @@ class SearchUserViewController: UIViewController {
             .debounce(2, scheduler: MainScheduler.instance)
             .subscribe { (e) in
                 if let s = e.element.unsafelyUnwrapped {
-                    self.viewModel.searchUser(name: s)
+                    if !s.isEmpty {
+                        self.viewModel.searchUser(name: s)
+                    }
                 }
         }.disposed(by: bag)
         
         self.userTableView.rx.itemSelected.subscribe{ indexPath in
             print(indexPath.element)
             }.disposed(by: bag)
+        
+        viewModel.isLoading.asObservable().subscribe { (e) in
+            print(e.element)
+        }
     }
 
 }

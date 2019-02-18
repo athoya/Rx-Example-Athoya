@@ -28,15 +28,22 @@ class SearchUserViewModel: BaseViewModel {
         res.removeAll()
         self.result.accept(res)
         
-        self.repo.getUsers(name)
+        isLoading.accept(false)
+        
+        self.repo.getUsersWithAlmo(name)
             .flatMap{ Observable.from($0.users) }
-            .flatMap{ Observable.zip( Observable.just($0), self.repo.getUsersRepository(login: $0.name) ) }
-            .subscribe{ (e) in
-                if let user = e.element?.0, let value = e.element?.1 {
-                    var res = self.result.value
-                    res[user.name] = value.repos
-                    self.result.accept(res)
-                }
-            }.disposed(by: bag)
+            .flatMap{ Observable.zip( Observable.just($0), self.repo.getUsersRepository(login: $0.name) ) }.subscribe(onNext: { (arg0) in
+                let (user, repo) = arg0
+                var res = self.result.value
+                res[user.name] = repo.repos
+                self.result.accept(res)
+            }, onError: { (error) in
+                print(error.localizedDescription)
+            }, onCompleted: {
+                self.isLoading.accept(true)
+                print("completed")
+            }) { // ondisposed
+                print("OnDisposed")
+        }.disposed(by: bag)
     }
 }
